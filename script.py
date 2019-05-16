@@ -1,5 +1,6 @@
 import requests
 import config
+import json
 from PyQt5 import QtWidgets
 
 
@@ -37,7 +38,31 @@ def get_textbook(access_token,academic_year,term,subject,course_number):
         res['data']
     except KeyError:
         return res['userMessage'] + "\n" + res['developerMessage']
-    return str(res['data'])
+    return res['data']
+
+def pretty_textbook(textbooks):
+    try:
+        textbooks[0]['id']
+    except (TypeError,KeyError) as e:
+        return textbooks;
+    except (IndexError) as e:
+        return "Course not exist."
+    count = 1
+    ret = ""
+    for textbook in textbooks:
+        ret += "Textbook " + str(count) + ":\n"
+        try:
+            ret += "Title: " + textbook['attributes']['title'] + "\n"
+            ret += "Author: " + textbook['attributes']['author'] + "\n"
+            ret += "Edition: " + str(textbook['attributes']['edition']) + "\n"
+            ret += "Year: " + str(textbook['attributes']['copyrightYear']) + "\n"
+            ret += "New Book Price: " + str(textbook['attributes']['priceNewUSD']) + "\n"
+            ret += "Used Book Price: " + str(textbook['attributes']['priceUsedUSD']) + "\n"
+            ret += "\n"
+            count += 1
+        except (TypeError, KeyError) as e:
+            ret += "Bad data of this textbook. \n\n"
+    return ret
 
 def visualize():
     app = QtWidgets.QApplication([])
@@ -65,7 +90,8 @@ def visualize():
             result_text = "Credential Error. Check config file."
         else:
             result_text = get_textbook(ac,text_year.toPlainText(),text_term.toPlainText(),text_subject.toPlainText(),text_number.toPlainText())
-        text_result.setPlainText(result_text)
+            result_text = pretty_textbook(result_text)
+        text_result.setPlainText(str(result_text))
 
 
     button.clicked.connect(on_button_clicked)
