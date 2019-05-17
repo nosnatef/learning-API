@@ -124,24 +124,24 @@ def visualize():
 
     button.clicked.connect(on_button_clicked)
 
+    widget_list = [
+                text_year,
+                example_label_year,
+                text_term,
+                example_label_term,
+                text_subject,
+                example_label_subject,
+                text_number,
+                example_label_number,
+                text_section,
+                example_label_section,
+                button,
+                text_result]
+
     vbox = QtWidgets.QVBoxLayout()
-    vbox.addWidget(text_year)
-    vbox.addWidget(example_label_year)
 
-    vbox.addWidget(text_term)
-    vbox.addWidget(example_label_term)
-
-    vbox.addWidget(text_subject)
-    vbox.addWidget(example_label_subject)
-
-    vbox.addWidget(text_number)
-    vbox.addWidget(example_label_number)
-
-    vbox.addWidget(text_section)
-    vbox.addWidget(example_label_section)
-
-    vbox.addWidget(button)
-    vbox.addWidget(text_result)
+    for widget in widget_list:
+        vbox.addWidget(widget)
 
     window.setLayout(vbox)
 
