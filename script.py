@@ -1,6 +1,7 @@
-import config
 from PyQt5 import QtWidgets
 import requests
+
+import config
 
 
 client_id = config.API_CONFIG['client_id']
@@ -37,10 +38,10 @@ def get_textbook(
         'subject': subject,
         'courseNumber': course_number
     }
-    if section != "":
+    if section:
         textbook_params['section'] = section
     req = requests.get(url, params=textbook_params, headers={
-        'Authorization': 'Bearer {0}'.format(access_token)
+        'Authorization': f'Bearer {access_token}'
     })
     res = req.json()
     try:
@@ -56,7 +57,7 @@ def pretty_textbook(textbooks):
         textbooks[0]['id']
     except KeyError:
         return textbooks
-    except (IndexError):
+    except TypeError:
         return 'Course not exist.'
     count = 1
     ret = ''
@@ -64,20 +65,20 @@ def pretty_textbook(textbooks):
         ret += 'Textbook ' + str(count) + ':\n'
         try:
             text_attr = textbook['attributes']
-            ret += 'Title: {0}\n'.format(text_attr["title"])
-            ret += 'Author: {0}\n'.format(text_attr['author'])
-            ret += 'Edition: {0}\n'.format(text_attr['edition'])
-            ret += 'Year: {0}\n'.format(text_attr['copyrightYear'])
-            ret += 'New Book Price: {0}\n'.format(text_attr['priceNewUSD'])
-            ret += 'Used Book Price: {0}\n'.format(text_attr['priceUsedUSD'])
+            ret += f"Title: {text_attr['title']}\n"
+            ret += f"Author: {text_attr['author']}\n"
+            ret += f"Edition: {text_attr['edition']}\n"
+            ret += f"Year: {text_attr['copyrightYear']}\n"
+            ret += f"New Book Price: {text_attr['priceNewUSD']}\n"
+            ret += f"Used Book Price: {text_attr['priceUsedUSD']}\n"
             ret += '\n'
             count += 1
-        except (TypeError, KeyError):
+        except KeyError:
             ret += 'Bad data of this textbook. \n\n'
     return ret
 
 
-def get_textbox(placeholder, height):
+def get_textbox(placeholder, height=25):
     ret = QtWidgets.QTextEdit(placeholderText=placeholder)
     ret.setMaximumHeight(height)
     return ret
@@ -87,12 +88,12 @@ def visualize():
     app = QtWidgets.QApplication([])
     window = QtWidgets.QWidget()
     button = QtWidgets.QPushButton('Click')
-    text_height = 25
-    text_year = get_textbox('year', text_height)
-    text_term = get_textbox('term', text_height)
-    text_subject = get_textbox('subject', text_height)
-    text_number = get_textbox('number', text_height)
-    text_section = get_textbox('section', text_height)
+
+    text_year = get_textbox('year')
+    text_term = get_textbox('term')
+    text_subject = get_textbox('subject')
+    text_number = get_textbox('number')
+    text_section = get_textbox('section')
     text_result = QtWidgets.QTextEdit(placeholderText='result')
 
     example_label_year = QtWidgets.QLabel('Example: 2019')
