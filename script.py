@@ -33,13 +33,15 @@ def get_textbook(
         section=None):
     url = 'https://api.oregonstate.edu/v1/textbooks'
     textbook_params = {
-        'academicYear': academic_year,
-        'term': term,
-        'subject': subject,
-        'courseNumber': course_number
+        'academicYear': academic_year.toPlainText(),
+        'term': term.toPlainText(),
+        'subject': subject.toPlainText(),
+        'courseNumber': course_number.toPlainText()
     }
+    section = section.toPlainText()
     if section:
         textbook_params['section'] = section
+    print(textbook_params)
     req = requests.get(url, params=textbook_params, headers={
         'Authorization': f'Bearer {access_token}'
     })
@@ -107,18 +109,13 @@ def visualize():
         if ac == 'Error':
             result_text = 'Credential Error. Check config file.'
         else:
-            text_year_text = text_year.toPlainText()
-            text_subject_text = text_subject.toPlainText()
-            text_number_text = text_number.toPlainText()
-            text_term_text = text_term.toPlainText()
-            text_section_text = text_section.toPlainText()
             result_text = get_textbook(
                 ac,
-                text_year_text,
-                text_term_text,
-                text_subject_text,
-                text_number_text,
-                text_section_text
+                text_year,
+                text_term,
+                text_subject,
+                text_number,
+                text_section
             )
             result_text = pretty_textbook(result_text)
         text_result.setPlainText(str(result_text))
