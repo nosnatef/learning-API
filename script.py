@@ -41,7 +41,6 @@ def get_textbook(
     section = section.toPlainText()
     if section:
         textbook_params['section'] = section
-    print(textbook_params)
     req = requests.get(url, params=textbook_params, headers={
         'Authorization': f'Bearer {access_token}'
     })
