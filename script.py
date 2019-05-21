@@ -1,83 +1,150 @@
+from PyQt5 import QtWidgets
 import requests
-import config
-from PyQt5.QtWidgets import *
 
-client_id = config.API_CONFIG['client_id'];
-client_secret = config.API_CONFIG['client_secret'];
+import config
+
+
+client_id = config.API_CONFIG['client_id']
+client_secret = config.API_CONFIG['client_secret']
+
 
 def get_access_token():
-    url = "https://api.oregonstate.edu/oauth2/token";
-    req = requests.post(url,data={
-        'grant_type':'client_credentials',
-        'client_id':client_id,
-        'client_secret':client_secret
-    });
-    res = req.json();
+    url = 'https://api.oregonstate.edu/oauth2/token'
+    req = requests.post(url, data={
+        'grant_type': 'client_credentials',
+        'client_id': client_id,
+        'client_secret': client_secret
+    })
+    res = req.json()
 
-    access_token = res['access_token'];
-    return access_token;
+    try:
+        access_token = res['access_token']
+    except KeyError:
+        access_token = 'Error'
+    return access_token
 
-def get_textbook(access_token,p1,p2,p3,p4):
-    
-    academic_year = str(p1);
-    term = str(p2);
-    subject = str(p3);
-    course_number = str(p4);
-    #academic_year = input("Enter Academic Year:");
-    #term = input("Enter term (Fall, Winter, Spring, Summer):");
-    #subject = input("Enter subject (abbreviation):");
-    #course_number = input("Enter course number:");
 
-    url = "https://api.oregonstate.edu/v1/textbooks";
-    req = requests.get(url,params={
-        "academicYear":academic_year,
-        "term":term,
-        "subject":subject,
-        "courseNumber":course_number
-    },headers={
-        "Authorization":"Bearer " + access_token
-    });
-    res = req.json();
-    return str(res['data']);
+def get_textbook(
+        access_token,
+        academic_year,
+        term,
+        subject,
+        course_number,
+        section=None):
+    url = 'https://api.oregonstate.edu/v1/textbooks'
+    textbook_params = {
+        'academicYear': academic_year.toPlainText(),
+        'term': term.toPlainText(),
+        'subject': subject.toPlainText(),
+        'courseNumber': course_number.toPlainText()
+    }
+    section = section.toPlainText()
+    if section:
+        textbook_params['section'] = section
+    req = requests.get(url, params=textbook_params, headers={
+        'Authorization': f'Bearer {access_token}'
+    })
+    res = req.json()
+    try:
+        return res['data']
+    except KeyError:
+        return res['userMessage'] + '\n' + res['developerMessage']
+
+
+def pretty_textbook(textbooks):
+    if not textbooks:
+        return 'No textbook for this course.'
+    try:
+        textbooks[0]['id']
+    except KeyError:
+        return textbooks
+    except TypeError:
+        return 'Course not exist.'
+    count = 1
+    ret = ''
+    for textbook in textbooks:
+        ret += 'Textbook ' + str(count) + ':\n'
+        try:
+            text_attr = textbook['attributes']
+            ret += f"Title: {text_attr['title']}\n"
+            ret += f"Author: {text_attr['author']}\n"
+            ret += f"Edition: {text_attr['edition']}\n"
+            ret += f"Year: {text_attr['copyrightYear']}\n"
+            ret += f"New Book Price: {text_attr['priceNewUSD']}\n"
+            ret += f"Used Book Price: {text_attr['priceUsedUSD']}\n"
+            ret += '\n'
+            count += 1
+        except KeyError:
+            ret += 'Bad data of this textbook. \n\n'
+    return ret
+
+
+def get_textbox(placeholder, height=25):
+    ret = QtWidgets.QTextEdit(placeholderText=placeholder)
+    ret.setMaximumHeight(height)
+    return ret
+
 
 def visualize():
-    app = QApplication([])
-    window = QWidget();
-    button = QPushButton('Click')
-    text_height = 25;
-    text_year = QTextEdit(placeholderText='year');
-    text_year.setMaximumHeight(text_height);
-    text_term = QTextEdit(placeholderText='term');
-    text_term.setMaximumHeight(text_height);
-    text_subject = QTextEdit(placeholderText='subject');
-    text_subject.setMaximumHeight(text_height);
-    text_number = QTextEdit(placeholderText='number');
-    text_number.setMaximumHeight(text_height);
-    text_result = QTextEdit(placeholderText="result");
+    app = QtWidgets.QApplication([])
+    window = QtWidgets.QWidget()
+    button = QtWidgets.QPushButton('Click')
+
+    text_year = get_textbox('year')
+    text_term = get_textbox('term')
+    text_subject = get_textbox('subject')
+    text_number = get_textbox('number')
+    text_section = get_textbox('section')
+    text_result = QtWidgets.QTextEdit(placeholderText='result')
+
+    example_label_year = QtWidgets.QLabel('Example: 2019')
+    example_label_term = QtWidgets.QLabel('Example: Spring')
+    example_label_subject = QtWidgets.QLabel('Example: CS')
+    example_label_number = QtWidgets.QLabel('Example: 161')
+    example_label_section = QtWidgets.QLabel('(Optional) Example: 001')
 
     def on_button_clicked():
-        result_text = get_textbook(get_access_token(),text_year.toPlainText(),text_term.toPlainText(),text_subject.toPlainText(),text_number.toPlainText());
-        text_result.setPlainText(result_text);
-
+        ac = get_access_token()
+        if ac == 'Error':
+            result_text = 'Credential Error. Check config file.'
+        else:
+            result_text = get_textbook(
+                ac,
+                text_year,
+                text_term,
+                text_subject,
+                text_number,
+                text_section
+            )
+            result_text = pretty_textbook(result_text)
+        text_result.setPlainText(str(result_text))
 
     button.clicked.connect(on_button_clicked)
-    
-    vbox = QVBoxLayout();
-    vbox.addWidget(text_year);
-    vbox.addWidget(text_term);
-    vbox.addWidget(text_subject);
-    vbox.addWidget(text_number);
-    vbox.addWidget(button);
-    vbox.addWidget(text_result);
 
-    window.setLayout(vbox);
+    widget_list = [
+                text_year,
+                example_label_year,
+                text_term,
+                example_label_term,
+                text_subject,
+                example_label_subject,
+                text_number,
+                example_label_number,
+                text_section,
+                example_label_section,
+                button,
+                text_result]
 
-    window.show();
+    vbox = QtWidgets.QVBoxLayout()
+
+    for widget in widget_list:
+        vbox.addWidget(widget)
+
+    window.setLayout(vbox)
+
+    window.show()
 
     app.exec_()
 
-#access = get_access_token();
-#get_textbook(access);
 
-visualize();
-
+visualize()

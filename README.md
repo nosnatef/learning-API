@@ -12,7 +12,7 @@ This script is used to test the campus Textbook API.
 1. Install dependencies via pip:
 
     ```shell
-    $ pip install -r requirements
+    $ pip install -r requirements.txt
     ```
 
 2. Run the test file:
